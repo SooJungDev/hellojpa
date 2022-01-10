@@ -18,23 +18,23 @@ import java.util.List;
  * jpql 에서 성능 최적활르 위해 제공하는 기능
  * 연관된 엔티티나 컬렉션은 SQL 한번에 함께 조회하는 기능
  * join fetch 명령어 사용
- *
+ * <p>
  * 패치 조인의 특징과 한계
- *
+ * <p>
  * 패치 조인 대상에는 별칭을 줄 수 없다.
  * 하이버네이트는 가능, 가급적 사용 X
- *
+ * <p>
  * 둘 이상의 컬렉션은 패치 조인 할 수 없다
- *
+ * <p>
  * 컬렉션을 패치 조인하면 페이징 API 를 사용 할 수 없다.
  * 알대일, 다대일 같은 단일 값 연관 필드들은 패치 조인해도 페이징 가능
  * 하이버네이트는 경고 로그를 남기고 메모리에서 페이징(매우 위험)
- *
+ * <p>
  * 페치 조인의 특징과 한계
  * 연관된 엔티티들을 SQL 한번으로 조회- 성능 최적화
  * 엔티티에 직접 적용하는 글로벌 로딩 전략보다 우선함
  * 실무에서 글로벌 로딩 전략은 모두 지연로딩
- * 최적화가 필요한 곳은 페치 조인 적용
+ * 최적화가 필요한 곳은 페치 조인 적용용
  */
 public class JpaMain {
     public static void main(String[] args) {
@@ -69,29 +69,13 @@ public class JpaMain {
             member3.setTeam(teamB);
             em.persist(member3);
 
-            em.flush();
+
+            // FLUSH 자동 호출
+            int resultCount = em.createQuery("update Member m set m.age=20").executeUpdate();
+
             em.clear();
-
-            String query = "select t from Team t";
-            List<Team> result = em.createQuery(query, Team.class)
-                    .setFirstResult(0)
-                    .setMaxResults(2)
-                    .getResultList();
-
-            System.out.println("result.size() = " + result.size());
-
-            for (Team team : result) {
-                System.out.println("team = " + team.getName() + "|members" + team.getMembers().size());
-                for (Member member : team.getMembers()) {
-                    System.out.println(" -> member = " + member);
-                }
-                // 회원1 ,팀A (SQL)
-                // 회원2 ,팀A (1차캐시)
-                // 회원3 ,팀B(SQL)
-
-                // 회원 100명 -> N + 1
-            }
-
+            Member findMember = em.find(Member.class, member1.getId());
+            System.out.println("findMember = " + findMember.getAge());
 
             tx.commit();
         } catch (Exception e) {
